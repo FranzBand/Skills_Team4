@@ -7,8 +7,7 @@ library(ggplot2)
 library(readr)
 
 # Load data
-data_path <- "C:/Users/helod/OneDrive/Documents/Computational Research/ScanRecords.csv"
-data <- read_csv(data_path, show_col_types = FALSE)
+data <- read_csv("ScanRecords.csv", show_col_types = FALSE)
 
 # Convert Duration (hours -> minutes) and ensure Time is numeric (hours)
 data <- mutate(data,
@@ -32,7 +31,6 @@ n2 <- nrow(type2)  # number of Type 2 patients
 print(n2)
 
 
-
 # Daily counts of Type 2 patients 
 daily_counts_t2 <- summarise(
   group_by(type2, Date),
@@ -52,7 +50,7 @@ mu_dur2 <- mean(type2$Duration)
 sigma_dur2 <- sd(type2$Duration)
 
 ggplot(type2, aes(x = Duration)) +
-  geom_histogram(aes(y = ..density..), bins = 20, fill = "salmon", color = "black", alpha = 0.8) +
+  geom_histogram(aes(y = after_stat(density)), bins = 20, fill = "salmon", color = "black", alpha = 0.8) +
   stat_function(fun = dnorm,
                 args = list(mean = mu_dur2, sd = sigma_dur2),
                 color = "red", linewidth = 1.2) +
