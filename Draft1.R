@@ -42,17 +42,35 @@ print(mean_daily_n1)
 sd_daily_n1 <- sd(daily_n1)
 print(sd_daily_n1)
 
+# Daily counts of Type 2 patients 
+daily_counts_t2 <- summarise(
+  group_by(type2, Date),
+  n_patients = n(),
+  .groups = "drop"
+)
+
+daily_n2 <- daily_counts_t2$n_patients
+print(daily_n2)
+mean_daily_n2 <- mean(daily_n2)
+print(mean_daily_n2)
+sd_daily_n2 <- sd(daily_n2)
+print(sd_daily_n2)
+
 #----parameters for duration----
 mean_dur_1 <- mean(data_1d)  #get the mean of type 1
+mean_dur_1 <- round(mean_dur_1, digits= 2)
 mean_dur_1
 
 mean_dur_2 <- mean(data_2d)  #get the mean of type 2
+mean_dur_2 <- round(mean_dur_2, digits= 2)
 mean_dur_2
 
-sd_dur_1 <- sd(data_1d)   #get the sd of type 1 for duration
+sd_dur_1 <- sd(data_1d) #get the sd of type 1 for duration
+sd_dur_1 <- round(sd_dur_1, digits= 2)
 sd_dur_1
 
 sd_dur_2<- sd(data_2d)    #get the sd of type 2
+sd_dur_2 <- round(sd_dur_2, digits= 2)
 sd_dur_2
 
 ci_mean_dur_1 <- t.test(data_1d)
@@ -69,15 +87,19 @@ ci_mean_dur_4
 
 #----parameters for time----
 mean_time_1 <- mean(data_1t)  #get the mean of type 1
+mean_time_1 <- round(mean_time_1, digits= 2)
 mean_time_1
 
 mean_time_2 <- mean(data_2t)  #get the mean of type 2
+mean_time_2 <- round(mean_time_2, digits= 2)
 mean_time_2
 
-sd_time_1 <- sd(data_1t)   #get the sd of type 1 for duration
+sd_time_1 <- sd(data_1t)   #get the sd of type 1 for time
+sd_time_1  <- round(sd_time_1 , digits= 2)
 sd_time_1
 
 sd_time_2<- sd(data_2t)    #get the sd of type 2
+sd_time_2  <- round(sd_time_2 , digits= 2)
 sd_time_2
 
 ci_mean_time_1 <- t.test(data_1t)
@@ -102,6 +124,19 @@ ggplot(type1, aes(x = Duration)) +
   labs(title = "Type 1 Scan Duration with Normal Curve",
        x = "Duration (minutes)", y = "Density") +
   theme_minimal()
+
+#histogram to get distribution of duration for type 1
+ggplot(type2, aes(x = Duration)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 20, fill = "salmon", color = "black", alpha = 0.8) +
+  stat_function(fun = dnorm,
+                args = list(mean = mean_dur_2, sd = sd_dur_2),
+                color = "red", linewidth = 1.2) +
+  labs(title = "Type 2 Scan Duration with Normal Curve",
+       x = "Duration (minutes)", y = "Density") +
+  theme_minimal()
+
+#
+
 
 #----Chi squared test for duration of both types----
 #AIIIII!!!!!!
@@ -257,4 +292,80 @@ daily_counts_t1 <- type1 %>% group_by(Date) %>% summarise(n_patients = n())
 fit_poisson <- fitdist(daily_counts_t1$n_patients, "pois")
 summary(fit_poisson)
 plot(fit_poisson)
+
+#----monte carlo simulation with bootstrap----
+set.seed(515)													# Set the seed
+nr.sim <- 2000													# Number of simulations
+B <- 499														# Number of bootstrap replications
+n <- 100														# Sample size
+alpha <- 0.05													# Nominal level of the test
+mu <- 0															# Set the true value of the mean
+reject <- rep(0, times = nr.sim)								# Vector to store rejections
+
+for (i in 1:nr.sim){											# Start the simulations
+  ## Step 1: Simulate ##
+  X <- rnorm(n, mean = mu)									# Draw X
+  
+  ## Step 2: Apply ##
+  X.bar <- mean(X)											# Sample mean of X
+  St.Dev <- sd(X)												# Standard deviation of X
+  Q <- sqrt(n)*X.bar / St.Dev									# Test statistic
+  
+  Q.star <- rep(NA, times = B)								# Vector for bootstrap quantities
+  for (b in 1:B) {
+    J <- sample.int(n, size = n, replace = TRUE)			# Draw the indices J
+    X.star <- X[J]											# Draw the bootstrap sample
+    X.bar.star <- mean(X.star)								# Bootstrap sample mean
+    St.Dev.star <- sd(X.star)								# Bootstrap standard deviation
+    Q.star[b] <- sqrt(n)*(X.bar.star - X.bar) / St.Dev.star	# Bootstrap test statistic
+  }
+  cv.star <- quantile(Q.star, probs = 1-alpha)				# Bootstrap critical value
+  
+  ## Step 3: Evaluate ##
+  if (Q > cv.star) {reject[i] <- 1}							# Check if the null hypothesis is rejected
+}
+
+## Step 4: Summarize ##
+ERF <- mean(reject)												# Empirical rejection frequency
+
+## Give output on screen ##
+if (mu == 0) {
+  print(paste("Size using bootstrap:", ERF))
+} else if (mu > 0) {
+  print(paste("Power using bootstrap:", ERF))
+}
+
+#----MC Sim for duration type 1 patients----
+set.seed(515)                           # Set the seed for the random number generator
+nr.sim <- 5000                          # Number of simulations
+n <- n_d1                            # Sample size
+alpha <- 0.05                           # Nominal level of the test
+mu_true <- mean_dur_1                   # Set the true value of the mean: 25.71 for size, > 0 for power
+mu_null <- 25                           #null hypothesis mean
+reject.n <- rep(0, times = nr.sim)      # Initialise a vector of 0s to store rejections
+reject.t <- rep(0, times = nr.sim)      # Initialise a vector of 0s to store rejections
+
+for (i in 1:nr.sim){                    # Start the simulations
+  ## Step 1: Simulate ##
+  X <- rnorm(n, mean = mu_true, sd= sd_dur_1)    # Draw X under alternative
+  ## Step 2: Apply ##
+  X.bar <- mean(X)                    # Sample mean of X
+  St.Dev <- sd(X)                     # Standard deviation of X
+  t.stat <- sqrt(n) * (X.bar- mu_null)/St.Dev         # Test statistic
+  cv.t <- qt(1-alpha, n-1)            # one sided t critical value
+  ## Step 3: Evaluate ##
+  if (t.stat > cv.t) {reject.t[i] <- 1}  # Check if the null hypothesis is rejected
+}
+
+## Step 4: Summarize ##
+ERF.t <- mean(reject.t)                 # Empirical rejection frequency (t cv)
+## Give output on screen ##
+if (mu_true == 25.71) {
+  print(paste("Size using t cv:",ERF.t))
+} else if (mu > 25.71) {
+  print(paste("Power using t cv:",ERF.t))
+}
+
+power <- ERF.t
+cat("power using t cv:", power, "\n")
 
