@@ -1,6 +1,10 @@
+#----load packages----
 library(dplyr)
 library(ggplot2)
 library(readr)
+library(tibble)
+
+#----load data----
 data <- read.csv("ScanRecords.csv") #load data
 View(data)
 
@@ -16,34 +20,90 @@ type2 <- split_data$"Type 2"  #type 2
 data_1d <- type1$Duration #load duration of type 1
 data_2d <- type2$Duration #load duration of type 2
 View(data_1d)
-m_d_1 <- mean(data_1d)  #get the mean of type 1
-m_d_1
+View(data_2d)
 
-m_d_2 <- mean(data_2d)  #get the mean of type 2
-m_d_2
+data_1t <- type1$Time #load duration of type 1
+data_2t <- type2$Time #load duration of type 2
+View(data_1t)
+View(data_2t)
 
-sd_d_1 <- sd(data_1d)   #get the sd of type 1 for duration
-sd_d_1
+#----understand number of patients daily----
+# Daily counts of Type 1 patients 
+daily_counts_t1 <- summarise(
+  group_by(type1, Date),
+  n_patients = n(),
+  .groups = "drop"
+)
 
-sd_d_2<- sd(data_2d)    #get the sd of type 2
-sd_d_2
+daily_n1 <- daily_counts_t1$n_patients
+print(daily_n1)
+mean_daily_n1 <- mean(daily_n1)
+print(mean_daily_n1)
+sd_daily_n1 <- sd(daily_n1)
+print(sd_daily_n1)
 
-sd_t_1 <- sd(data_1t)   #get the sd of type 1 for time
-sd_t_1
+#----parameters for duration----
+mean_dur_1 <- mean(data_1d)  #get the mean of type 1
+mean_dur_1
 
-ci_m_d_1 <- t.test(data_1d)
-ci_m_d_1
+mean_dur_2 <- mean(data_2d)  #get the mean of type 2
+mean_dur_2
 
-ci_m_d_3 <- t.test(data_1d, mu=25)
-ci_m_d_3
+sd_dur_1 <- sd(data_1d)   #get the sd of type 1 for duration
+sd_dur_1
 
-ci_m_d_2 <- t.test(data_2d)
-ci_m_d_2
+sd_dur_2<- sd(data_2d)    #get the sd of type 2
+sd_dur_2
 
-ci_m_d_4 <- t.test(data_2d, mu= 41)
-ci_m_d_4
+ci_mean_dur_1 <- t.test(data_1d)
+ci_mean_dur_1
 
+ci_mean_dur_3 <- t.test(data_1d, mu=25)
+ci_mean_dur_3
 
+ci_mean_dur_2 <- t.test(data_2d)
+ci_mean_dur_2
+
+ci_mean_dur_4 <- t.test(data_2d, mu= 41)
+ci_mean_dur_4
+
+#----parameters for time----
+mean_time_1 <- mean(data_1t)  #get the mean of type 1
+mean_time_1
+
+mean_time_2 <- mean(data_2t)  #get the mean of type 2
+mean_time_2
+
+sd_time_1 <- sd(data_1t)   #get the sd of type 1 for duration
+sd_time_1
+
+sd_time_2<- sd(data_2t)    #get the sd of type 2
+sd_time_2
+
+ci_mean_time_1 <- t.test(data_1t)
+ci_mean_time_1
+
+ci_mean_time_3 <- t.test(data_1t, mu=12.5)
+ci_mean_time_3
+
+ci_mean_time_2 <- t.test(data_2t)
+ci_mean_time_2
+
+ci_mean_time_4 <- t.test(data_2t, mu= 12.5)
+ci_mean_time_4
+
+#----visualize distribution of duration----
+#histogram to get distribution of duration for type 1
+ggplot(type1, aes(x = Duration)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 20, fill = "steelblue", color = "black", alpha = 0.8) +
+  stat_function(fun = dnorm,
+                args = list(mean = mean_dur_1, sd = sd_dur_1),
+                color = "red", linewidth = 1.2) +
+  labs(title = "Type 1 Scan Duration with Normal Curve",
+       x = "Duration (minutes)", y = "Density") +
+  theme_minimal()
+
+#----Chi squared test for duration of both types----
 #AIIIII!!!!!!
 n_d1 <- length(data_1d)
 n_d2 <- length(data_2d)
@@ -52,23 +112,34 @@ n_d2 <- length(data_2d)
 conf.level <- 0.95
 alpha <- 1 - conf.level
 
-# Chi-squared critical values
+# Chi-squared critical values for duration 1
 chi2_lower_d1 <- qchisq(alpha/2, df = n_d1 - 1)
 chi2_upper_d1 <- qchisq(1 - alpha/2, df = n_d1 - 1)
 
 # Confidence interval for standard deviation of type 1
-ci_sd_lower_d1 <- sqrt((n_d1 - 1) * sd_d_1^2 / chi2_upper_d1)
-ci_sd_upper_d1 <- sqrt((n_d1 - 1) * sd_d_1^2 / chi2_lower_d1)
+ci_sd_lower_d1 <- sqrt((n_d1 - 1) * sd_dur_1^2 / chi2_upper_d1)
+ci_sd_upper_d1 <- sqrt((n_d1 - 1) * sd_dur_1^2 / chi2_lower_d1)
 
 # Result
 ci_sd_d1 <- c(ci_sd_lower_d1, ci_sd_upper_d1)
-print(ci_sd_d1)
+cat("CI for SD of duration (type1):",ci_sd_d1, "\n")
+
+#type 2
+# Chi-squared critical values
+chi2_lower_d2 <- qchisq(alpha/2, df = n_d2 - 1)
+chi2_upper_d2 <- qchisq(1 - alpha/2, df = n_d2 - 1)
+
+# Confidence interval for standard deviation of type 1
+ci_sd_lower_d2 <- sqrt((n_d2 - 1) * sd_dur_2^2 / chi2_upper_d2)
+ci_sd_upper_d2 <- sqrt((n_d2 - 1) * sd_dur_2^2 / chi2_lower_d2)
+
+# Result
+ci_sd_d2 <- c(ci_sd_lower_d2, ci_sd_upper_d2)
+cat("CI for SD of duration (type2):",ci_sd_d2, "\n")
 
 
-
-
-#test on saturday
-
+#----quantiles for type 1 and 2----
+#type1
 t1 <- data_frame(type1) #get the dataframe of type 1
 View(t1)
 
@@ -80,7 +151,6 @@ print(quant_t1)
 
 #for type 2
 t2 <- data_frame(type2)
-t2 <- tibble(type2)
 View(t2)
 
 quant_d2 <- quantile(t2$Duration, na.rm=TRUE) #quantile for duration of type 2
@@ -89,24 +159,26 @@ print(quant_d2)
 quant_t2 <- quantile(t2$Time, na.rm=TRUE) #quantile for time of type 2 times
 print(quant_t2)
 
-#to do: do all condidence intervals for mean, sd/ var, etc.!!!!!
+#to do: do all confidence intervals for mean, sd/ var, etc.!!!!!
 
 
-#for meeting 20.10 CI time type 1
-data_1t <- type1$Time #load duration of type 1
+#----CI time type 1----
 n_t1 <- length(data_1t) #length data type 1$Time
+# Confidence level (e.g., 95%)
+conf.level <- 0.95
+alpha <- 1 - conf.level
 
 # Chi-squared critical values
 chi2_lower_t1 <- qchisq(alpha/2, df = n_t1 - 1)
 chi2_upper_t1 <- qchisq(1 - alpha/2, df = n_t1 - 1)
 
 # Confidence interval for standard deviation
-ci_sd_lower_t1 <- sqrt((n_t1 - 1) * sd_t_1^2 / chi2_upper_t1)
-ci_sd_upper_t1 <- sqrt((n_t1 - 1) * sd_t_1^2 / chi2_lower_t1)
+ci_sd_lower_t1 <- sqrt((n_t1 - 1) * sd_time_1^2 / chi2_upper_t1)
+ci_sd_upper_t1 <- sqrt((n_t1 - 1) * sd_time_1^2 / chi2_lower_t1)
 
 # Result
-ci_sd_t1 <- c(ci_sd_lower_t1, ci_sd_upper_t1)
-print(ci_sd_t1) #result CI sd for time Type 1
+ci_sd_time1 <- c(ci_sd_lower_t1, ci_sd_upper_t1)
+print(ci_sd_time1) #result CI sd for time Type 1
 
 #confidence interval for means, time type 1
 ci_m_t_1 <- t.test(data_1t)
@@ -116,55 +188,73 @@ ci_m_t_3 <- t.test(data_1t, mu=12.5)
 ci_m_t_3
 
 
+#----CI duration type 1----
+n_d1 <- length(data_1d) #length data type 1$Time
 
-#wald test
-# Extract coefficient and standard error
-beta_hat <- 37
-se <- sd_d_1
+# Chi-squared critical values
+chi2_lower_d1 <- qchisq(alpha/2, df = n_d1 - 1)
+chi2_upper_d1 <- qchisq(1 - alpha/2, df = n_d1 - 1)
 
-# Hypothesized value (e.g., 0)
-beta0 <- m_d_1
+# Confidence interval for standard deviation
+ci_sd_lower_d1 <- sqrt((n_d1 - 1) * sd_dur_1^2 / chi2_upper_d1)
+ci_sd_upper_d1 <- sqrt((n_d1 - 1) * sd_dur_1^2 / chi2_lower_d1)
 
-# Wald test statistic
-W <- (beta_hat - beta0)^2 / se^2
+#Result of confidence interval for sd
+ci_sd_d1 <- c(ci_sd_lower_d1, ci_sd_upper_d1)
+print(ci_sd_d1) 
 
-# p-value
-p_value <- 1 - pchisq(W, df = 1)
+#confidence interval for means, duration type 1
+ci_m_d_1 <- t.test(data_1d)
+ci_m_d_1
 
-# 95% CI
-ci <- beta_hat + c(-1, 1) * qnorm(0.975) * se
+ci_m_d_3 <- t.test(data_1d, mu=26)
+ci_m_d_3
 
-# Output
-cat("Wald test statistic:", W, "\n")
-cat("p-value:", p_value, "\n")
-cat("95% CI:", ci, "\n")
 
-#AI!!!!!!!
-mean_d1 <- mean(data_1d)  # Mean duration for Type 1
-threshold <- mean_d1 + 10  # Threshold: 10 minutes above the mean
+#----test to get probabilities threshold is exceeded----
+threshold_type1 <- mean_dur_1 + 10  # Threshold: 10 minutes above the mean
+above_threshold_type1 <- sum(data_1d > threshold_type1, na.rm = TRUE)
+n_d1 <- length(data_1d)
+p_hat_type1 <- above_threshold_type1/ n_d1
 
-above_threshold <- sum(data_1d > threshold, na.rm = TRUE)
-n_d1 <- length(data_1d)  # Total number of observations
-p_hat <- above_threshold / n_d1  # Sample proportion
+#Exact binomial confidence interval
+ci_exact_type1 <- binom.test(above_threshold_type1, n_d1)$conf.int
 
-# Hypothesized proportion (e.g., 0.5 for no effect, or another value)
-p0 <- 0.5
+cat("Threshold (mean + 10 minutes:", threshold_type1, "\n")
+cat("Empirical probability:", p_hat_type1, "\n")
+cat("Exact 95% CI for proportion:", ci_exact_type1, "\n")
 
-# Standard error of the proportion
-se <- sqrt(p_hat * (1 - p_hat) / n_d1)
 
-# Wald test statistic
-W <- (p_hat - p0)^2 / se^2
+p_norm_dur1 <- 1 - pnorm(threshold_type1, mean = mean_dur_1, sd = sd_dur_1)
+cat("Probability (normal):", p_norm_dur1, "\n")
 
-# p-value (chi-squared distribution with 1 df)
-p_value <- 1 - pchisq(W, df = 1)
 
-# 95% Wald confidence interval for the proportion
-ci <- p_hat + c(-1, 1) * qnorm(0.975) * se
+#type2 patients
+threshold_type2 <- mean_dur_2 + 10  # Threshold: 10 minutes above the mean
+above_threshold_type2 <- sum(data_2d > threshold_type2, na.rm = TRUE)
 
-cat("Threshold (mean + 10 minutes):", threshold, "\n")
-cat("Number of durations above threshold:", above_threshold, "\n")
-cat("Sample proportion:", p_hat, "\n")
-cat("Wald test statistic:", W, "\n")
-cat("p-value:", p_value, "\n")
-cat("95% CI for proportion:", ci, "\n")
+ci_exact_type2 <- binom.test(above_threshold_type2, n_d2)$conf.int
+cat("Exact 95% CI for proportion:", ci_exact_type2, "\n")
+
+
+p_norm_dur2 <- 1 - pnorm(threshold_type2, mean = mean_dur_2, sd = sd_dur_2)
+cat("Probability (normal):", p_norm_dur2, "\n")
+
+#----bootstrap----
+library(boot)
+boot_prob <- boot(data = data_1d,
+                  statistic = function(x, idx) {
+                    mean(x[idx] > threshold_type1, na.rm = TRUE)
+                  },
+                  R = 1000)
+boot_ci <- boot.ci(boot_prob, type = "bca")
+cat("Bootstrap 95% CI:", boot_ci$bca[4:5], "\n")
+
+
+#----checking for exponential distribution----
+library(fitdistrplus)
+daily_counts_t1 <- type1 %>% group_by(Date) %>% summarise(n_patients = n())
+fit_poisson <- fitdist(daily_counts_t1$n_patients, "pois")
+summary(fit_poisson)
+plot(fit_poisson)
+
