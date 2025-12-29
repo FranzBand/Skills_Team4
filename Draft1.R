@@ -35,12 +35,33 @@ daily_counts_t1 <- summarise(
   .groups = "drop"
 )
 
+
 daily_n1 <- daily_counts_t1$n_patients
 print(daily_n1)
 mean_daily_n1 <- mean(daily_n1)
+mean_daily_n1 <- round(mean_daily_n1, digits= 0)
 print(mean_daily_n1)
+cat("Mean of number of patients of type 1 daily is:", mean_daily_n1,"\n")
 sd_daily_n1 <- sd(daily_n1)
+sd_daily_n1 <- round(sd_daily_n1, digits= 0)
 print(sd_daily_n1)
+cat("Standard deviance of number of patients of type 1 daily is:", sd_daily_n1,"\n")
+
+#confidence interval for number patients type 1
+ci_mean_daily_t1 <- t.test(daily_n1, mu=17)
+confint_mean_daily_t1 <- round(ci_mean_daily_t1$conf.int, digits=0)
+print(ci_mean_daily_t1)
+print(confint_mean_daily_t1)
+
+#quantile daily patients type 1
+quant_daily_n1 <- quantile(daily_n1)
+print("Quantiles for daily patients:")
+print(quant_daily_n1)
+
+#histogram to see it better
+hist(daily_n1, xlab= "number of patients per day",
+     main= "Daily patients frequency",
+     col= "blue")
 
 # Daily counts of Type 2 patients 
 daily_counts_t2 <- summarise(
@@ -51,10 +72,24 @@ daily_counts_t2 <- summarise(
 
 daily_n2 <- daily_counts_t2$n_patients
 print(daily_n2)
+
 mean_daily_n2 <- mean(daily_n2)
+mean_daily_n2 <- round(mean_daily_n2, digits= 0)
 print(mean_daily_n2)
+
 sd_daily_n2 <- sd(daily_n2)
+sd_daily_n2 <- round(sd_daily_n2, digits= 0)
 print(sd_daily_n2)
+
+#quantile daily patients type 2
+quant_daily_n2 <- quantile(daily_n2)
+print("Quantiles for daily patients:")
+print(quant_daily_n2)
+
+#histogram to see it better
+hist(daily_n2, xlab= "number of patients per day",
+     main= "Daily patients frequency",
+     col= "red")
 
 #----parameters for duration----
 mean_dur_1 <- mean(data_1d)  #get the mean of type 1
@@ -73,17 +108,18 @@ sd_dur_2<- sd(data_2d)    #get the sd of type 2
 sd_dur_2 <- round(sd_dur_2, digits= 2)
 sd_dur_2
 
-ci_mean_dur_1 <- t.test(data_1d)
-ci_mean_dur_1
+#confidence intervals for durations
+ci_mean_dur_t1_mu0 <- t.test(data_1d)
+ci_mean_dur_t1_mu0
 
-ci_mean_dur_3 <- t.test(data_1d, mu=25)
-ci_mean_dur_3
+ci_mean_dur_t1_mu25 <- t.test(data_1d, mu=25)
+ci_mean_dur_t1_mu25
 
-ci_mean_dur_2 <- t.test(data_2d)
-ci_mean_dur_2
+ci_mean_dur_t2_mu0 <- t.test(data_2d)
+ci_mean_dur_t2_mu0
 
-ci_mean_dur_4 <- t.test(data_2d, mu= 41)
-ci_mean_dur_4
+ci_mean_dur_t2_mu41 <- t.test(data_2d, mu= 41)
+ci_mean_dur_t2_mu41
 
 #----parameters for time----
 mean_time_1 <- mean(data_1t)  #get the mean of type 1
@@ -102,17 +138,18 @@ sd_time_2<- sd(data_2t)    #get the sd of type 2
 sd_time_2  <- round(sd_time_2 , digits= 2)
 sd_time_2
 
-ci_mean_time_1 <- t.test(data_1t)
-ci_mean_time_1
+#confidence interval times
+ci_mean_time_t1_mu0 <- t.test(data_1t)
+ci_mean_time_t1_mu0
 
-ci_mean_time_3 <- t.test(data_1t, mu=12.5)
-ci_mean_time_3
+ci_mean_time_t1_mu12.5 <- t.test(data_1t, mu=12.5)
+ci_mean_time_t1_mu12.5
 
-ci_mean_time_2 <- t.test(data_2t)
-ci_mean_time_2
+ci_mean_time_t2_mu0 <- t.test(data_2t)
+ci_mean_time_t2_mu0
 
-ci_mean_time_4 <- t.test(data_2t, mu= 12.5)
-ci_mean_time_4
+ci_mean_time_t2_mu12.5 <- t.test(data_2t, mu= 12.5)
+ci_mean_time_t2_mu12.5
 
 #----visualize distribution of duration----
 #histogram to get distribution of duration for type 1
@@ -125,7 +162,7 @@ ggplot(type1, aes(x = Duration)) +
        x = "Duration (minutes)", y = "Density") +
   theme_minimal()
 
-#histogram to get distribution of duration for type 1
+#histogram to get distribution of duration for type 2
 ggplot(type2, aes(x = Duration)) +
   geom_histogram(aes(y = after_stat(density)), bins = 20, fill = "salmon", color = "black", alpha = 0.8) +
   stat_function(fun = dnorm,
@@ -255,7 +292,7 @@ p_hat_type1 <- above_threshold_type1/ n_d1
 #Exact binomial confidence interval
 ci_exact_type1 <- binom.test(above_threshold_type1, n_d1)$conf.int
 
-cat("Threshold (mean + 10 minutes:", threshold_type1, "\n")
+cat("Threshold (mean + 10 minutes):", threshold_type1, "\n")
 cat("Empirical probability:", p_hat_type1, "\n")
 cat("Exact 95% CI for proportion:", ci_exact_type1, "\n")
 
