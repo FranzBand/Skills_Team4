@@ -306,5 +306,45 @@ ggplot(type2, aes(x=Duration))+
        x= "Duration (minutes)", y= "Density")+
   theme_minimal()
 
+#----probabilities of thresholds are exceeded----
+
+#example with threshold = mean + 10min for type 1;
+#mean + 10 and 20 minutes respectively for type 2
+
+boxplot(data_2d, ylab= "minutes of duration",
+        main= "Boxlplot for duration type 2")
+
+#----type 1----
+#this can be done with empirical probabilities
+thr_dur_t1 <- round(mean_dur_1 + 10, digits= 1)
+thr_dur_t1
+boxplot(data_1d)
+round(quantile(data_1d), 0)
+
+prob_thr_exc_t1 <- mean(data_1d > thr_dur_t1)
+cat("The probability that the threshold of", thr_dur_t1, "minutes is exceeded is",
+    round(prob_thr_exc_t1 * 100, 2), "%", "or in",
+    round(prob_thr_exc_t1 * 1000, 0), "patients out of 1000 patiens","\n")
+
+#----type 2----
+#threshold mean + 10 minutes
+thr_dur_t2_10 <- round(mean_dur_2 + 20, digits= 1)
+thr_dur_t2_10
+
+prob_thr_exc_t2_10 <- mean(data_2d > thr_dur_t2_10)
+cat("The probability that the threshold of", thr_dur_t2_10, "minutes is exceeded is",
+    round(prob_thr_exc_t2_10 * 100, 2), "%", "or in",
+    round(prob_thr_exc_t2_10 * 1000, 0), "patients out of 1000 patiens","\n")
+
+#threshold mean + 20 minutes
+thr_dur_t2_20 <- round(mean_dur_2 + 10, digits= 1)
+thr_dur_t2_20
+boxplot(data_2d)
+round(quantile(data_2d), 0)
+
+prob_thr_exc_t2_20 <- mean(data_2d > thr_dur_t2_20)
+cat("The probability that the threshold of", thr_dur_t2_20, "minutes is exceeded is",
+    round(prob_thr_exc_t2_20 * 100, 2), "%", "or in",
+    round(prob_thr_exc_t2_20 * 1000, 0), "patients out of 1000 patiens","\n")
 
 
