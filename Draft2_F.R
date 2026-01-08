@@ -80,10 +80,13 @@ cat("95% Confidence Interval for lambda:", results_boot_ci_d1, "\n")
 mean_dur_1 <- mean(data_1d)  #get the mean of the duration for the scans of type 1
 mean_dur_1 <- round(mean_dur_1, digits= 2)  #round number of minutes
 mean_dur_1
+cat("Mean of duration for scans for patients type 1 is:", mean_dur_1, "\n")
 
 sd_dur_1 <- sd(data_1d) #get the sd of type 1 for duration
 sd_dur_1 <- round(sd_dur_1, digits= 2)
 sd_dur_1
+cat("SD of duration for scans for patients type 1 is:", sd_dur_1, "\n")
+
 
 #----visualize distribution of duration----
 #histogram to get distribution of duration for type 1
@@ -170,7 +173,7 @@ boot_results_daily2 <- boot(data= daily_n2,
 #calculate CI for bootstrap at 0.95
 boot_ci_daily_n2 <- boot.ci(boot_results_daily2, conf = 0.95, type = "bca")
 print(boot_ci_daily_n2)
-results_boot_ci_d2 <- round(boot_ci_daily_n2$bca[4:5], digits=0)
+results_boot_ci_d2 <- round(boot_ci_daily_n2$bca[4:5], digits=2)
 results_boot_ci_d2
 cat("Estimated lambda_t2 (mean daily arrivals for Type 2):", round(boot_results_daily2$t0, digits=0), "\n")
 cat("95% Confidence Interval for lambda_t2:", results_boot_ci_d2, "\n")
@@ -274,8 +277,8 @@ ci_mean <- c(
   X_bar - q_low * St.Dev
 )
 
-cat("Studentized bootstrap 95% CI for mean Duration:\n")
-print(ci_mean)
+cat("Studentized bootstrap 95% CI for mean Duration:",
+    ci_mean,"\n")
 
 # Bootstrap median, 90th percentile, and SD (percentile)
 
@@ -328,7 +331,7 @@ cat("The probability that the threshold of", thr_dur_t1, "minutes is exceeded is
 
 #----type 2----
 #threshold mean + 10 minutes
-thr_dur_t2_10 <- round(mean_dur_2 + 20, digits= 1)
+thr_dur_t2_10 <- round(mean_dur_2 + 10, digits= 1)
 thr_dur_t2_10
 
 prob_thr_exc_t2_10 <- mean(data_2d > thr_dur_t2_10)
@@ -337,7 +340,7 @@ cat("The probability that the threshold of", thr_dur_t2_10, "minutes is exceeded
     round(prob_thr_exc_t2_10 * 1000, 0), "patients out of 1000 patiens","\n")
 
 #threshold mean + 20 minutes
-thr_dur_t2_20 <- round(mean_dur_2 + 10, digits= 1)
+thr_dur_t2_20 <- round(mean_dur_2 + 20, digits= 1)
 thr_dur_t2_20
 boxplot(data_2d)
 round(quantile(data_2d), 0)
@@ -347,4 +350,45 @@ cat("The probability that the threshold of", thr_dur_t2_20, "minutes is exceeded
     round(prob_thr_exc_t2_20 * 100, 2), "%", "or in",
     round(prob_thr_exc_t2_20 * 1000, 0), "patients out of 1000 patiens","\n")
 
+#----things to look at later----
+# Example: Probability that a scan exceeds 40 minutes
+threshold <- 40
+empirical_prob <- mean(type2$Duration > threshold)
+cat("Empirical probability that a scan exceeds", threshold, "minutes:", round(empirical_prob, 3), "\n")
+
+empirical_prob_cases_abs <- empirical_prob* 100
+cat("A scan exceeds", threshold, "minutes in:", round(empirical_prob_cases_abs, 0),"out of 100 cases","\n")
+
+
+
+# Define a function to calculate the probability of exceeding the threshold
+prob_exceed <- function(data, indices) {
+  resampled_data <- data[indices]
+  mean(resampled_data > threshold)
+}
+
+# Run the bootstrap
+set.seed(123)
+n_boot <- 1000
+boot_results_prob <- boot(
+  data = type2$Duration,
+  statistic = prob_exceed,
+  R = n_boot
+)
+
+# Calculate the 95% confidence interval
+boot_ci_prob <- boot.ci(boot_results_prob, type = "bca", conf = 0.95)
+cat("95% Confidence Interval for probability of exceeding", threshold, "minutes:",
+    round(boot_ci_prob$bca[4:5], 3), "\n")
+
+
+thresholds <- c(30, 40, 50)
+for (t in thresholds) {
+  empirical_prob <- mean(type2$Duration > t)
+  boot_results_prob <- boot(type2$Duration, prob_exceed, R = n_boot)
+  boot_ci_prob <- boot.ci(boot_results_prob, type = "bca", conf = 0.95)
+  cat("Threshold:", t, "minutes\n")
+  cat("Empirical probability:", round(empirical_prob, 3), "\n")
+  cat("95% CI:", round(boot_ci_prob$bca[4:5], 3), "\n\n")
+}
 
