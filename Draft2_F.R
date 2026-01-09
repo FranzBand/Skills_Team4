@@ -392,3 +392,88 @@ for (t in thresholds) {
   cat("95% CI:", round(boot_ci_prob$bca[4:5], 3), "\n\n")
 }
 
+#----finding apporpriate distribution for type 2 scan durations ----
+library(fitdistrplus)
+
+fit_gamma <- fitdist(type2$Duration, "gamma", method = "mle")
+fit_lognormal <- fitdist(type2$Duration, "lnorm", method = "mle")
+
+
+plot(fit_gamma)
+plot(fit_lognormal)
+
+#aic/ bic to compare
+AIC(fit_gamma)
+AIC(fit_lognormal)
+BIC(fit_gamma)
+BIC(fit_lognormal)
+
+#----MC Sim for gamma dist----
+#double check!!!!!
+set.seed(515)                           # Set the seed for the random number generator
+nr.sim <- 5000                          # Number of simulations
+n <- n_d2                               # Size is number of observations of scans for t2 patients
+alpha <- 0.05                           # Nominal level of the test
+
+sim_mean_gamma <- rep(0, times = nr.sim)      # Initialise a vector of 0s to store rejections
+sim_sd_gamma <- rep(0, times = nr.sim)      # Initialise a vector of 0s to store rejections
+sim_prob_40_gamma <- rep(0, times = nr.sim)
+
+for (i in 1:nr.sim){                    # Start the simulations
+  ## Step 1: Simulate ##
+  X <- rgamma(n, shape = fit_gamma$estimate["shape"], rate = fit_gamma$estimate["rate"])   # Draw X
+  
+  ## Step 2: Apply ##
+  sim_mean_gamma[i] <- mean(X)                    # Sample mean of X
+  sim_sd_gamma[i] <- sd(X)                     # Standard deviation of X
+  sim_prob_40_gamma[i] <- mean(X > 40)         # prob exceeding 40 min
+
+}
+
+## Step 4: Summarize ##
+true_mean_gamma <- fit_gamma$estimate["shape"]/ fit_gamma$estimate["rate"]
+true_sd_gamma <- sqrt(fit_gamma$estimate["shape"]/ fit_gamma$estimate["rate"])
+true_prob_40_gamma <- 1 - pgamma(40, shape = fit_gamma$estimate["shape"], rate = fit_gamma$estimate["rate"])
+
+cat("True mean:", true_mean_gamma, "\n")
+cat("Mean of simulated means:", mean(sim_mean_gamma), "\n")
+cat("True standard deviation:", true_sd_gamma, "\n")
+cat("Mean of simulated standard deviations:", mean(sim_sd_gamma), "\n")
+cat("True probability of exceeding 40 minutes:", true_prob_40_gamma, "\n")
+cat("Mean of simulated probabilities of exceeding 40 minutes:", mean(sim_prob_40_gamma), "\n")
+
+
+#----MC Sim for lognormal dist----
+#double check!!!!!
+set.seed(515)                           # Set the seed for the random number generator
+nr.sim <- 5000                          # Number of simulations
+n <- n_d2                               # Size is number of observations of scans for t2 patients
+alpha <- 0.05                           # Nominal level of the test
+
+sim_mean_lognorm <- rep(0, times = nr.sim)      # Initialise a vector of 0s to store rejections
+sim_sd_lognorm <- rep(0, times = nr.sim)      # Initialise a vector of 0s to store rejections
+sim_prob_40_lognorm <- rep(0, times = nr.sim)
+
+for (i in 1:nr.sim){                    # Start the simulations
+  ## Step 1: Simulate ##
+  X <- rlnorm(n, meanlog = fit_lognormal$estimate["meanlog"], sdlog = fit_lognormal$estimate["sdlog"])   # Draw X
+  
+  ## Step 2: Apply ##
+  sim_mean_lognorm[i] <- mean(X)                    # Sample mean of X
+  sim_sd_lognorm[i] <- sd(X)                     # Standard deviation of X
+  sim_prob_40_lognorm[i] <- mean(X > 40)         # prob exceeding 40 min
+  
+}
+
+
+## Step 4: Summarize ##
+true_mean_lognorm <- fit_lognormal$estimate["meanlog"]/ fit_lognormal$estimate["sdlog"]
+true_sd_lognorm <- sqrt(fit_lognormal$estimate["meanlog"]/ fit_lognormal$estimate["sdlog"])
+true_prob_40_lognorm <- 1 - plnorm(40, meanlog = fit_lognormal$estimate["meanlog"], sdlog = fit_lognormal$estimate["sdlog"])
+
+cat("True mean:", true_mean_lognorm, "\n")
+cat("Mean of simulated means:", mean(sim_mean_lognorm), "\n")
+cat("True standard deviation:", true_sd_lognorm, "\n")
+cat("Mean of simulated standard deviations:", mean(sim_sd_lognorm), "\n")
+cat("True probability of exceeding 40 minutes:", true_prob_40_lognorm, "\n")
+cat("Mean of simulated probabilities of exceeding 40 minutes:", mean(sim_prob_40_lognorm), "\n")
