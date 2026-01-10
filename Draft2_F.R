@@ -88,10 +88,10 @@ sd_dur_1
 cat("SD of duration for scans for patients type 1 is:", sd_dur_1, "\n")
 
 
-#----visualize distribution of duration----
+#----visualize distribution of duration type 1----
 #histogram to get distribution of duration for type 1
 ggplot(type1, aes(x = Duration)) +
-  geom_histogram(aes(y = after_stat(density)), bins = 20, fill = "steelblue", color = "black", alpha = 0.8) +
+  geom_histogram(aes(y = after_stat(density)), bins = 20, fill = "blue", color = "black", alpha = 0.8) +
   stat_function(fun = dnorm,
                 args = list(mean = mean_dur_1, sd = sd_dur_1),
                 color = "red", linewidth = 1.2) +
@@ -478,4 +478,29 @@ cat("Mean of simulated standard deviations:", mean(sim_sd_lognorm), "\n")
 cat("True probability of exceeding 40 minutes:", true_prob_40_lognorm, "\n")
 cat("Mean of simulated probabilities of exceeding 40 minutes:", mean(sim_prob_40_lognorm), "\n")
 
+#----visualize log norm dist----
+#----visualize the scan duration distribution ----
+ggplot(type2, aes(x=Duration))+
+  geom_histogram(aes(y= after_stat(density)), bins=20, fill= "darkgreen", color= "black",
+                 alpha = 0.8)+
+stat_function(fun = dlnorm,
+              args = list(meanlog = fit_lognormal$estimate["meanlog"], sdlog = fit_lognormal$estimate["sdlog"]),
+              color = "red", linewidth = 1.2) +
+  labs(title = "Type 2 Scan Duration with Lognormal Curve",
+       x= "Duration (minutes)", y= "Density")+
+  theme_minimal()
+
+#----visualize gamma dist----
+#to change!!!!
+#----visualize the scan duration distribution ----
+ggplot(type2, aes(x=Duration))+
+  geom_histogram(aes(y= after_stat(density)), bins=20, fill= "orange", color= "black",
+                 alpha = 0.8)+
+  stat_function(fun = dgamma,
+                args = list(shape = fit_gamma$estimate["shape"], rate = fit_gamma$estimate["rate"]),
+                color = "red", linewidth = 1.2) +
+  labs(title = "Type 2 Scan Duration with Gamma Curve",
+       x= "Duration (minutes)", y= "Density")+
+  theme_minimal()
 #----end----
+?dgamma
