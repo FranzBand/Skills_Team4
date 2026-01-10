@@ -503,4 +503,3 @@ ggplot(type2, aes(x=Duration))+
        x= "Duration (minutes)", y= "Density")+
   theme_minimal()
 #----end----
-?dgamma
