@@ -210,7 +210,7 @@ print(min_daily_n2)
 mean_daily_n2 <- mean(daily_n2)
 sd_daily_n2 <- sd(daily_n2)
 
-set.seed(999)
+set.seed(42)
 B <- 999
 alpha <- 0.05
 n_days <- length(daily_n2)
@@ -243,7 +243,7 @@ print(min_X)
 
 # Bootstrap for Type 2 Duration (non-parametric)
 
-set.seed(515) #set seed for reproducibility
+set.seed(42) #set seed for reproducibility
 B <- 999       # number of bootstrap resamples
 alpha <- 0.05
 
@@ -368,7 +368,7 @@ prob_exceed <- function(data, indices) {
 }
 
 # Run the bootstrap
-set.seed(123)
+set.seed(42)
 n_boot <- 1000
 boot_results_prob <- boot(
   data = type2$Duration,
@@ -410,7 +410,7 @@ BIC(fit_lognormal)
 
 #----MC Sim for gamma dist----
 #double check!!!!!
-set.seed(515)                           # Set the seed for the random number generator
+set.seed(42)                           # Set the seed for the random number generator
 nr.sim <- 5000                          # Number of simulations
 n <- n_d2                               # Size is number of observations of scans for t2 patients
 alpha <- 0.05                           # Nominal level of the test
@@ -445,7 +445,7 @@ cat("Mean of simulated probabilities of exceeding 40 minutes:", mean(sim_prob_40
 
 #----MC Sim for lognormal dist----
 #double check!!!!!
-set.seed(515)                           # Set the seed for the random number generator
+set.seed(42)                           # Set the seed for the random number generator
 nr.sim <- 5000                          # Number of simulations
 n <- n_d2                               # Size is number of observations of scans for t2 patients
 alpha <- 0.05                           # Nominal level of the test
@@ -477,3 +477,5 @@ cat("True standard deviation:", true_sd_lognorm, "\n")
 cat("Mean of simulated standard deviations:", mean(sim_sd_lognorm), "\n")
 cat("True probability of exceeding 40 minutes:", true_prob_40_lognorm, "\n")
 cat("Mean of simulated probabilities of exceeding 40 minutes:", mean(sim_prob_40_lognorm), "\n")
+
+#----end----
