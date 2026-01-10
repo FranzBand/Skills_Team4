@@ -44,12 +44,12 @@ daily_n1 <- daily_counts_t1$n_patients
 print(daily_n1)
 
 lambda_hat <- mean(daily_n1)  #find the mean of the number of daily patients
-lambda_hat <- round(lambda_hat, digits= 0)  #round up to have simple number for hospital
+lambda_hat <- round(lambda_hat, digits= 2)  #round up to have simple number for hospital
 print(lambda_hat)
 cat("Mean of number of patients of type 1 daily is:", lambda_hat,"\n")
   
 sd_daily_n1 <- sd(daily_n1) #get the standard deviation for number of patients daily
-sd_daily_n1 <- round(sd_daily_n1, digits= 0)  #round up number
+sd_daily_n1 <- round(sd_daily_n1, digits= 2)  #round up number
 print(sd_daily_n1)
 cat("Standard deviance of number of patients of type 1 daily is:", sd_daily_n1,"\n")
 
@@ -72,7 +72,7 @@ boot_ci_daily_n1 <- boot.ci(boot_results_daily1, conf = 0.95, type = "bca")
 print(boot_ci_daily_n1)
 results_boot_ci_d1 <- round(boot_ci_daily_n1$bca[4:5], digits=0)
 results_boot_ci_d1
-cat("Estimated lambda (mean daily arrivals for Type 1):", round(boot_results$t0, digits=0), "\n")
+cat("Estimated lambda (mean daily arrivals for Type 1):", round(boot_results_daily1$t0, digits=0), "\n")
 cat("95% Confidence Interval for lambda:", results_boot_ci_d1, "\n")
 
 #----scan duration patients type 1 ----
@@ -147,12 +147,12 @@ daily_n2 <- daily_counts_t2$n_patients
 print(daily_n2)
 
 lambda_hat_t2 <- mean(daily_n2)  #find the mean of the number of daily patients
-lambda_hat_t2 <- round(lambda_hat_t2, digits= 0)  #round up to have simple number for hospital
+lambda_hat_t2 <- round(lambda_hat_t2, digits= 2)  #round up to have simple number for hospital
 print(lambda_hat_t2)
 cat("Mean of number of patients of type 2 daily is:", lambda_hat_t2,"\n")
 
 sd_daily_n2 <- sd(daily_n2) #get the standard deviation for number of patients daily
-sd_daily_n2 <- round(sd_daily_n2, digits= 0)  #round up number
+sd_daily_n2 <- round(sd_daily_n2, digits= 2)  #round up number
 print(sd_daily_n2)
 cat("Standard deviance of number of patients of type 2 daily is:", sd_daily_n2,"\n")
 
@@ -175,7 +175,7 @@ boot_ci_daily_n2 <- boot.ci(boot_results_daily2, conf = 0.95, type = "bca")
 print(boot_ci_daily_n2)
 results_boot_ci_d2 <- round(boot_ci_daily_n2$bca[4:5], digits=2)
 results_boot_ci_d2
-cat("Estimated lambda_t2 (mean daily arrivals for Type 2):", round(boot_results_daily2$t0, digits=0), "\n")
+cat("Estimated lambda_t2 (mean daily arrivals for Type 2):", round(boot_results_daily2$t0, digits=2), "\n")
 cat("95% Confidence Interval for lambda_t2:", results_boot_ci_d2, "\n")
 
 #----scan duration patients type 2 ----
@@ -235,11 +235,6 @@ print(ci_sd_daily)
 
 
 #----bootstrap (by heloise) for duration type 2----
-max_X <- max(X)
-print(max_X)
-
-min_X <- min(X)
-print(min_X)
 
 # Bootstrap for Type 2 Duration (non-parametric)
 
@@ -409,7 +404,8 @@ BIC(fit_gamma)
 BIC(fit_lognormal)
 
 #----MC Sim for gamma dist----
-#double check!!!!!
+n_d2 <- length(data_2d)
+
 set.seed(42)                           # Set the seed for the random number generator
 nr.sim <- 5000                          # Number of simulations
 n <- n_d2                               # Size is number of observations of scans for t2 patients
@@ -432,15 +428,15 @@ for (i in 1:nr.sim){                    # Start the simulations
 
 ## Step 4: Summarize ##
 true_mean_gamma <- fit_gamma$estimate["shape"]/ fit_gamma$estimate["rate"]
-true_sd_gamma <- sqrt(fit_gamma$estimate["shape"]/ fit_gamma$estimate["rate"])
+true_sd_gamma <- sqrt(fit_gamma$estimate["shape"])/ fit_gamma$estimate["rate"]
 true_prob_40_gamma <- 1 - pgamma(40, shape = fit_gamma$estimate["shape"], rate = fit_gamma$estimate["rate"])
 
-cat("True mean:", true_mean_gamma, "\n")
-cat("Mean of simulated means:", mean(sim_mean_gamma), "\n")
-cat("True standard deviation:", true_sd_gamma, "\n")
-cat("Mean of simulated standard deviations:", mean(sim_sd_gamma), "\n")
-cat("True probability of exceeding 40 minutes:", true_prob_40_gamma, "\n")
-cat("Mean of simulated probabilities of exceeding 40 minutes:", mean(sim_prob_40_gamma), "\n")
+cat("True mean:", round(true_mean_gamma, 2), "\n")
+cat("Mean of simulated means:", round(mean(sim_mean_gamma), 2), "\n")
+cat("True standard deviation:", round(true_sd_gamma,2), "\n")
+cat("Mean of simulated standard deviations:", round(mean(sim_sd_gamma), 2), "\n")
+cat("True probability of exceeding 40 minutes:", round(true_prob_40_gamma,2), "\n")
+cat("Mean of simulated probabilities of exceeding 40 minutes:", round(mean(sim_prob_40_gamma),2),"\n")
 
 
 #----MC Sim for lognormal dist----
@@ -467,8 +463,11 @@ for (i in 1:nr.sim){                    # Start the simulations
 
 
 ## Step 4: Summarize ##
-true_mean_lognorm <- fit_lognormal$estimate["meanlog"]/ fit_lognormal$estimate["sdlog"]
-true_sd_lognorm <- sqrt(fit_lognormal$estimate["meanlog"]/ fit_lognormal$estimate["sdlog"])
+mu_l <- fit_lognormal$estimate["meanlog"]
+sigma_l <- fit_lognormal$estimate["sdlog"]
+
+true_mean_lognorm <- exp(mu_l + (sigma_l)^2/2)
+true_sd_lognorm <- sqrt((exp((sigma_l)^2)-1)*exp(2*mu_l+(sigma_l)^2))
 true_prob_40_lognorm <- 1 - plnorm(40, meanlog = fit_lognormal$estimate["meanlog"], sdlog = fit_lognormal$estimate["sdlog"])
 
 cat("True mean:", true_mean_lognorm, "\n")
@@ -491,7 +490,6 @@ stat_function(fun = dlnorm,
   theme_minimal()
 
 #----visualize gamma dist----
-#to change!!!!
 #----visualize the scan duration distribution ----
 ggplot(type2, aes(x=Duration))+
   geom_histogram(aes(y= after_stat(density)), bins=20, fill= "orange", color= "black",
