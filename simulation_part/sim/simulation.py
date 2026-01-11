@@ -1,7 +1,6 @@
 import numpy as np
 
 from simulation_part.constants import SEED, NUM_MACHINES, PATIENT_DISTRIBUTIONS, SCHEDULE_PATIENTS, MAKE_SCAN
-from simulation_part.sim.analysis.data_collector import DataCollector
 from simulation_part.sim.sim_objects.machine import Machine
 from simulation_part.sim.sim_objects.patient import Patient
 from simulation_part.sim.sim_objects.simulation_time import Time
@@ -9,16 +8,16 @@ from simulation_part.sim.sim_objects.simulation_time import Time
 
 class Simulation:
 
-    def __init__(self, slot_time1, slot_time2, bool_shared_machines=False):
+    def __init__(self, slot_time1, slot_time2, collector, bool_shared_machines=False, seed=SEED):
         self.time = Time(0, 0)
         self._bool_shared_machines = bool_shared_machines
 
-        rng = np.random.default_rng(seed=SEED)
-        self._coll = DataCollector()
+        rng = np.random.default_rng(seed=seed)
+        self._coll = collector
 
         self._patients = [Patient(i, dists, slot_time, rng, self._coll)
                           for i, (dists, slot_time) in enumerate(zip(PATIENT_DISTRIBUTIONS, [slot_time1, slot_time2]))]
-        self._machines = [Machine(self._coll) for _ in range(NUM_MACHINES)]
+        self._machines = [Machine(self._coll, i) for i in range(NUM_MACHINES)]
 
         self._events = ([{'time':patient.sample_next_call(self.time),
                           'event_type':SCHEDULE_PATIENTS,
@@ -30,6 +29,7 @@ class Simulation:
     def next_event(self):
         next_event = self._events.pop(0)
         self.time = next_event['time']
+        self._coll.set_time(self.time)
         event_type = next_event['event_type']
 
         if event_type == SCHEDULE_PATIENTS:
@@ -55,13 +55,10 @@ class Simulation:
             # Searches for the first available machine
             best_machine, best_time = None, Time(np.inf, 0)
             for machine in self._machines:
-                if best_time < machine.time_next_free_slot():
+                if machine.time_next_free_slot() < best_time:
                     best_machine, best_time = machine, machine.time_next_free_slot()
             machine = best_machine
         else:
             machine = self._machines[patient_data['patient_type']]
         machine.schedule_patient(patient_data, self.time)
-
-    def run_analysis(self):
-        self._coll.run_analysis()
 

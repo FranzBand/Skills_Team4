@@ -1,10 +1,12 @@
-from simulation_part.constants import HOURS_IN_DAY
+from simulation_part.constants import HOURS_IN_DAY, PRINT_SIM_PROGRESS
 from simulation_part.sim.sim_objects.simulation_time import Time
 
 
 class Machine:
 
-    def __init__(self, collector):
+    def __init__(self, collector, machine_id):
+        self._id = machine_id
+
         self._start_time_next_patient = Time(0, 0)
         self._next_free_slot = Time(0, 0)
         self._patient_schedule = []
@@ -32,16 +34,26 @@ class Machine:
 
         patient_data['scheduled_at'] = schedule_time
         self._patient_schedule.append(patient_data)
-        print(f"Patient of type {patient_data['patient_type']}: scheduled at {patient_data['scheduled_at']}")
+        if PRINT_SIM_PROGRESS:
+            print(f"Patient of type {patient_data['patient_type']}: scheduled at {patient_data['scheduled_at']}")
+        self._coll.log_patient_scheduled(patient_data)
 
     def scan_next_patient(self):
         patient_data = self._patient_schedule.pop(0)
+        self._coll.log_patient_start_treatment(patient_data)
 
         end_scan_at = self._start_time_next_patient.copy()
         end_scan_at.hour += patient_data['scan_duration']
 
-        print(f"Patient of type {patient_data['patient_type']}: treated at   {self._start_time_next_patient}")
-        print(f"   - Planned for {patient_data['slot_time']} and it took {patient_data['scan_duration']:.2f}")
+        if PRINT_SIM_PROGRESS:
+            print(f"Patient of type {patient_data['patient_type']}: treated at   {self._start_time_next_patient}")
+            print(f"   - Planned for {patient_data['slot_time']} and it took {patient_data['scan_duration']:.2f}")
 
-        next_scheduled_at = self._patient_schedule[0]['scheduled_at']
+        if len(self._patient_schedule) > 0:
+            next_patient = self._patient_schedule[0]
+            next_scheduled_at = next_patient['scheduled_at']
+        else:
+            next_scheduled_at = Time(patient_data['scheduled_at'].day+1, 0)
         self._start_time_next_patient = max(next_scheduled_at, end_scan_at)
+
+        self._coll.log_patient_ends_treatment(patient_data, next_scheduled_at, end_scan_at, self._id)
