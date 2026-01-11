@@ -67,7 +67,7 @@ class DataCollector:
         self._over_time = [[], []]
         self._idle_time = [[], []]
 
-    def run_time_slot_analysis(self, font_size=14):
+    def run_time_slot_analysis(self, font_size=16):
         features = self._summary_stats.columns[2:]  # all columns except x and y
 
         for slot, wait1, wait2, over, idle in [["slot1", "wait1_1", "wait2_1", "over_1", "idle_1"], ["slot2", "wait1_2", "wait2_2", "over_2", "idle_2"]]:
@@ -156,6 +156,33 @@ class DataCollector:
         print(f"Machines {treatments_machines1:>6} {treatments_machines2:>6}")
         print(f"Idle     {idle_time1:6.2f} {idle_time2:6.2f}")
 
+        print(3*"\n")
+        print("Type I")
+        print(
+            f"{np.mean(self._wait_times1[0]):5.2f} days", ' & ',
+            f"{np.sum(np.array(self._wait_times1[0]) > 1) / len(self._wait_times1[0]) * 100:5.2f}", ' & ',
+            f"{np.mean(self._wait_times2[0])*60:5.2f} mins", ' & ',
+            f"{np.sum(np.array(self._wait_times2[0]) > (10/60)) / len(self._wait_times2[0]) * 100:5.2f}", ' & ',
+            f"{np.mean(self._over_time[0])*60:5.2f} mins", ' & ',
+            f"{np.sum(np.array(self._over_time[0]) != 0) / len(self._over_time[0]) * 100:5.2f}"
+        )
+
+        print("Type II")
+        print(
+            f"{np.mean(self._wait_times1[1]):5.2f} days", ' & ',
+            f"{np.sum(np.array(self._wait_times1[1]) > 1) / len(self._wait_times1[1]) * 100:5.2f}", ' & ',
+            f"{np.mean(self._wait_times2[1])*60:5.2f} mins", ' & ',
+            f"{np.sum(np.array(self._wait_times2[1]) > (10 / 60)) / len(self._wait_times2[1]) * 100:5.2f}", ' & ',
+            f"{np.mean(self._over_time[1])*60:5.2f} mins", ' & ',
+            f"{np.sum(np.array(self._over_time[1]) != 0) / len(self._over_time[1]) * 100:5.2f}"
+        )
+
+        print("Type mixed (over time)")
+        print(
+            f"{np.mean(self._over_time) * 60:5.2f} mins", ' & ',
+            f"{np.sum(np.array(self._over_time) != 0) / len(self._over_time[0] + self._over_time[1]) * 100:5.2f}"
+        )
+
         _plot_hist(self._wait_times1[0], title="Days until treatment (Type I)", days=True, is_integer=True)
         _plot_hist(self._wait_times1[0], title="Days until treatment (Type II)", days=True, is_integer=True)
         _plot_hist(self._wait_times2[0], title="Treatment delay (TYPE I)", )
@@ -167,7 +194,7 @@ class DataCollector:
         plt.close('all')
 
 
-def _plot_hist(data, title="", days=False, is_integer=False, font_size=14):
+def _plot_hist(data, title="", days=False, is_integer=False, font_size=16):
     fig, ax = plt.subplots(figsize=(8, 5))
 
     bins = np.arange(np.min(data) - 0.5, np.max(data) + 1.5, 1) if is_integer else None

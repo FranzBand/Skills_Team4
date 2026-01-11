@@ -11,7 +11,7 @@ TIME_SLOT_TYPEII = 45  # In minutes
 TIME_SLOTS_TYPEI = np.arange(20, 31)      # In minutes
 TIME_SLOTS_TYPEII = np.arange(30, 51, 2)  # In minutes
 
-SHARED_MACHINES = True
+SHARED_MACHINES = False
 
 def run_simulation():
     data_collector = DataCollector()
