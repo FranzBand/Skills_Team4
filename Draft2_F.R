@@ -44,12 +44,12 @@ daily_n1 <- daily_counts_t1$n_patients
 print(daily_n1)
 
 lambda_hat <- mean(daily_n1)  #find the mean of the number of daily patients
-lambda_hat <- round(lambda_hat, digits= 0)  #round up to have simple number for hospital
+lambda_hat <- round(lambda_hat, digits= 2)  #round up to have simple number for hospital
 print(lambda_hat)
 cat("Mean of number of patients of type 1 daily is:", lambda_hat,"\n")
   
 sd_daily_n1 <- sd(daily_n1) #get the standard deviation for number of patients daily
-sd_daily_n1 <- round(sd_daily_n1, digits= 0)  #round up number
+sd_daily_n1 <- round(sd_daily_n1, digits= 2)  #round up number
 print(sd_daily_n1)
 cat("Standard deviance of number of patients of type 1 daily is:", sd_daily_n1,"\n")
 
@@ -72,7 +72,7 @@ boot_ci_daily_n1 <- boot.ci(boot_results_daily1, conf = 0.95, type = "bca")
 print(boot_ci_daily_n1)
 results_boot_ci_d1 <- round(boot_ci_daily_n1$bca[4:5], digits=0)
 results_boot_ci_d1
-cat("Estimated lambda (mean daily arrivals for Type 1):", round(boot_results$t0, digits=0), "\n")
+cat("Estimated lambda (mean daily arrivals for Type 1):", round(boot_results_daily1$t0, digits=0), "\n")
 cat("95% Confidence Interval for lambda:", results_boot_ci_d1, "\n")
 
 #----scan duration patients type 1 ----
@@ -80,15 +80,18 @@ cat("95% Confidence Interval for lambda:", results_boot_ci_d1, "\n")
 mean_dur_1 <- mean(data_1d)  #get the mean of the duration for the scans of type 1
 mean_dur_1 <- round(mean_dur_1, digits= 2)  #round number of minutes
 mean_dur_1
+cat("Mean of duration for scans for patients type 1 is:", mean_dur_1, "\n")
 
 sd_dur_1 <- sd(data_1d) #get the sd of type 1 for duration
 sd_dur_1 <- round(sd_dur_1, digits= 2)
 sd_dur_1
+cat("SD of duration for scans for patients type 1 is:", sd_dur_1, "\n")
 
-#----visualize distribution of duration----
+
+#----visualize distribution of duration type 1----
 #histogram to get distribution of duration for type 1
 ggplot(type1, aes(x = Duration)) +
-  geom_histogram(aes(y = after_stat(density)), bins = 20, fill = "steelblue", color = "black", alpha = 0.8) +
+  geom_histogram(aes(y = after_stat(density)), bins = 20, fill = "blue", color = "black", alpha = 0.8) +
   stat_function(fun = dnorm,
                 args = list(mean = mean_dur_1, sd = sd_dur_1),
                 color = "red", linewidth = 1.2) +
@@ -144,12 +147,12 @@ daily_n2 <- daily_counts_t2$n_patients
 print(daily_n2)
 
 lambda_hat_t2 <- mean(daily_n2)  #find the mean of the number of daily patients
-lambda_hat_t2 <- round(lambda_hat_t2, digits= 0)  #round up to have simple number for hospital
+lambda_hat_t2 <- round(lambda_hat_t2, digits= 2)  #round up to have simple number for hospital
 print(lambda_hat_t2)
 cat("Mean of number of patients of type 2 daily is:", lambda_hat_t2,"\n")
 
 sd_daily_n2 <- sd(daily_n2) #get the standard deviation for number of patients daily
-sd_daily_n2 <- round(sd_daily_n2, digits= 0)  #round up number
+sd_daily_n2 <- round(sd_daily_n2, digits= 2)  #round up number
 print(sd_daily_n2)
 cat("Standard deviance of number of patients of type 2 daily is:", sd_daily_n2,"\n")
 
@@ -170,9 +173,9 @@ boot_results_daily2 <- boot(data= daily_n2,
 #calculate CI for bootstrap at 0.95
 boot_ci_daily_n2 <- boot.ci(boot_results_daily2, conf = 0.95, type = "bca")
 print(boot_ci_daily_n2)
-results_boot_ci_d2 <- round(boot_ci_daily_n2$bca[4:5], digits=0)
+results_boot_ci_d2 <- round(boot_ci_daily_n2$bca[4:5], digits=2)
 results_boot_ci_d2
-cat("Estimated lambda_t2 (mean daily arrivals for Type 2):", round(boot_results_daily2$t0, digits=0), "\n")
+cat("Estimated lambda_t2 (mean daily arrivals for Type 2):", round(boot_results_daily2$t0, digits=2), "\n")
 cat("95% Confidence Interval for lambda_t2:", results_boot_ci_d2, "\n")
 
 #----scan duration patients type 2 ----
@@ -207,7 +210,7 @@ print(min_daily_n2)
 mean_daily_n2 <- mean(daily_n2)
 sd_daily_n2 <- sd(daily_n2)
 
-set.seed(999)
+set.seed(42)
 B <- 999
 alpha <- 0.05
 n_days <- length(daily_n2)
@@ -232,15 +235,10 @@ print(ci_sd_daily)
 
 
 #----bootstrap (by heloise) for duration type 2----
-max_X <- max(X)
-print(max_X)
-
-min_X <- min(X)
-print(min_X)
 
 # Bootstrap for Type 2 Duration (non-parametric)
 
-set.seed(515) #set seed for reproducibility
+set.seed(42) #set seed for reproducibility
 B <- 999       # number of bootstrap resamples
 alpha <- 0.05
 
@@ -274,8 +272,8 @@ ci_mean <- c(
   X_bar - q_low * St.Dev
 )
 
-cat("Studentized bootstrap 95% CI for mean Duration:\n")
-print(ci_mean)
+cat("Studentized bootstrap 95% CI for mean Duration:",
+    ci_mean,"\n")
 
 # Bootstrap median, 90th percentile, and SD (percentile)
 
@@ -328,7 +326,7 @@ cat("The probability that the threshold of", thr_dur_t1, "minutes is exceeded is
 
 #----type 2----
 #threshold mean + 10 minutes
-thr_dur_t2_10 <- round(mean_dur_2 + 20, digits= 1)
+thr_dur_t2_10 <- round(mean_dur_2 + 10, digits= 1)
 thr_dur_t2_10
 
 prob_thr_exc_t2_10 <- mean(data_2d > thr_dur_t2_10)
@@ -337,7 +335,7 @@ cat("The probability that the threshold of", thr_dur_t2_10, "minutes is exceeded
     round(prob_thr_exc_t2_10 * 1000, 0), "patients out of 1000 patiens","\n")
 
 #threshold mean + 20 minutes
-thr_dur_t2_20 <- round(mean_dur_2 + 10, digits= 1)
+thr_dur_t2_20 <- round(mean_dur_2 + 20, digits= 1)
 thr_dur_t2_20
 boxplot(data_2d)
 round(quantile(data_2d), 0)
@@ -347,4 +345,159 @@ cat("The probability that the threshold of", thr_dur_t2_20, "minutes is exceeded
     round(prob_thr_exc_t2_20 * 100, 2), "%", "or in",
     round(prob_thr_exc_t2_20 * 1000, 0), "patients out of 1000 patiens","\n")
 
+#----things to look at later----
+# Example: Probability that a scan exceeds 40 minutes
+threshold <- 40
+empirical_prob <- mean(type2$Duration > threshold)
+cat("Empirical probability that a scan exceeds", threshold, "minutes:", round(empirical_prob, 3), "\n")
 
+empirical_prob_cases_abs <- empirical_prob* 100
+cat("A scan exceeds", threshold, "minutes in:", round(empirical_prob_cases_abs, 0),"out of 100 cases","\n")
+
+
+
+# Define a function to calculate the probability of exceeding the threshold
+prob_exceed <- function(data, indices) {
+  resampled_data <- data[indices]
+  mean(resampled_data > threshold)
+}
+
+# Run the bootstrap
+set.seed(42)
+n_boot <- 1000
+boot_results_prob <- boot(
+  data = type2$Duration,
+  statistic = prob_exceed,
+  R = n_boot
+)
+
+# Calculate the 95% confidence interval
+boot_ci_prob <- boot.ci(boot_results_prob, type = "bca", conf = 0.95)
+cat("95% Confidence Interval for probability of exceeding", threshold, "minutes:",
+    round(boot_ci_prob$bca[4:5], 3), "\n")
+
+
+thresholds <- c(30, 40, 50)
+for (t in thresholds) {
+  empirical_prob <- mean(type2$Duration > t)
+  boot_results_prob <- boot(type2$Duration, prob_exceed, R = n_boot)
+  boot_ci_prob <- boot.ci(boot_results_prob, type = "bca", conf = 0.95)
+  cat("Threshold:", t, "minutes\n")
+  cat("Empirical probability:", round(empirical_prob, 3), "\n")
+  cat("95% CI:", round(boot_ci_prob$bca[4:5], 3), "\n\n")
+}
+
+#----finding apporpriate distribution for type 2 scan durations ----
+library(fitdistrplus)
+
+fit_gamma <- fitdist(type2$Duration, "gamma", method = "mle")
+fit_lognormal <- fitdist(type2$Duration, "lnorm", method = "mle")
+
+
+plot(fit_gamma)
+plot(fit_lognormal)
+
+#aic/ bic to compare
+AIC(fit_gamma)
+AIC(fit_lognormal)
+BIC(fit_gamma)
+BIC(fit_lognormal)
+
+#----MC Sim for gamma dist----
+n_d2 <- length(data_2d)
+
+set.seed(42)                           # Set the seed for the random number generator
+nr.sim <- 5000                          # Number of simulations
+n <- n_d2                               # Size is number of observations of scans for t2 patients
+alpha <- 0.05                           # Nominal level of the test
+
+sim_mean_gamma <- rep(0, times = nr.sim)      # Initialise a vector of 0s to store rejections
+sim_sd_gamma <- rep(0, times = nr.sim)      # Initialise a vector of 0s to store rejections
+sim_prob_40_gamma <- rep(0, times = nr.sim)
+
+for (i in 1:nr.sim){                    # Start the simulations
+  ## Step 1: Simulate ##
+  X <- rgamma(n, shape = fit_gamma$estimate["shape"], rate = fit_gamma$estimate["rate"])   # Draw X
+  
+  ## Step 2: Apply ##
+  sim_mean_gamma[i] <- mean(X)                    # Sample mean of X
+  sim_sd_gamma[i] <- sd(X)                     # Standard deviation of X
+  sim_prob_40_gamma[i] <- mean(X > 40)         # prob exceeding 40 min
+
+}
+
+## Step 4: Summarize ##
+true_mean_gamma <- fit_gamma$estimate["shape"]/ fit_gamma$estimate["rate"]
+true_sd_gamma <- sqrt(fit_gamma$estimate["shape"])/ fit_gamma$estimate["rate"]
+true_prob_40_gamma <- 1 - pgamma(40, shape = fit_gamma$estimate["shape"], rate = fit_gamma$estimate["rate"])
+
+cat("True mean:", round(true_mean_gamma, 2), "\n")
+cat("Mean of simulated means:", round(mean(sim_mean_gamma), 2), "\n")
+cat("True standard deviation:", round(true_sd_gamma,2), "\n")
+cat("Mean of simulated standard deviations:", round(mean(sim_sd_gamma), 2), "\n")
+cat("True probability of exceeding 40 minutes:", round(true_prob_40_gamma,2), "\n")
+cat("Mean of simulated probabilities of exceeding 40 minutes:", round(mean(sim_prob_40_gamma),2),"\n")
+
+
+#----MC Sim for lognormal dist----
+#double check!!!!!
+set.seed(42)                           # Set the seed for the random number generator
+nr.sim <- 5000                          # Number of simulations
+n <- n_d2                               # Size is number of observations of scans for t2 patients
+alpha <- 0.05                           # Nominal level of the test
+
+sim_mean_lognorm <- rep(0, times = nr.sim)      # Initialise a vector of 0s to store rejections
+sim_sd_lognorm <- rep(0, times = nr.sim)      # Initialise a vector of 0s to store rejections
+sim_prob_40_lognorm <- rep(0, times = nr.sim)
+
+for (i in 1:nr.sim){                    # Start the simulations
+  ## Step 1: Simulate ##
+  X <- rlnorm(n, meanlog = fit_lognormal$estimate["meanlog"], sdlog = fit_lognormal$estimate["sdlog"])   # Draw X
+  
+  ## Step 2: Apply ##
+  sim_mean_lognorm[i] <- mean(X)                    # Sample mean of X
+  sim_sd_lognorm[i] <- sd(X)                     # Standard deviation of X
+  sim_prob_40_lognorm[i] <- mean(X > 40)         # prob exceeding 40 min
+  
+}
+
+
+## Step 4: Summarize ##
+mu_l <- fit_lognormal$estimate["meanlog"]
+sigma_l <- fit_lognormal$estimate["sdlog"]
+
+true_mean_lognorm <- exp(mu_l + (sigma_l)^2/2)
+true_sd_lognorm <- sqrt((exp((sigma_l)^2)-1)*exp(2*mu_l+(sigma_l)^2))
+true_prob_40_lognorm <- 1 - plnorm(40, meanlog = fit_lognormal$estimate["meanlog"], sdlog = fit_lognormal$estimate["sdlog"])
+
+cat("True mean:", true_mean_lognorm, "\n")
+cat("Mean of simulated means:", mean(sim_mean_lognorm), "\n")
+cat("True standard deviation:", true_sd_lognorm, "\n")
+cat("Mean of simulated standard deviations:", mean(sim_sd_lognorm), "\n")
+cat("True probability of exceeding 40 minutes:", true_prob_40_lognorm, "\n")
+cat("Mean of simulated probabilities of exceeding 40 minutes:", mean(sim_prob_40_lognorm), "\n")
+
+#----visualize log norm dist----
+#----visualize the scan duration distribution ----
+ggplot(type2, aes(x=Duration))+
+  geom_histogram(aes(y= after_stat(density)), bins=20, fill= "darkgreen", color= "black",
+                 alpha = 0.8)+
+stat_function(fun = dlnorm,
+              args = list(meanlog = fit_lognormal$estimate["meanlog"], sdlog = fit_lognormal$estimate["sdlog"]),
+              color = "red", linewidth = 1.2) +
+  labs(title = "Type 2 Scan Duration with Lognormal Curve",
+       x= "Duration (minutes)", y= "Density")+
+  theme_minimal()
+
+#----visualize gamma dist----
+#----visualize the scan duration distribution ----
+ggplot(type2, aes(x=Duration))+
+  geom_histogram(aes(y= after_stat(density)), bins=20, fill= "orange", color= "black",
+                 alpha = 0.8)+
+  stat_function(fun = dgamma,
+                args = list(shape = fit_gamma$estimate["shape"], rate = fit_gamma$estimate["rate"]),
+                color = "red", linewidth = 1.2) +
+  labs(title = "Type 2 Scan Duration with Gamma Curve",
+       x= "Duration (minutes)", y= "Density")+
+  theme_minimal()
+#----end----

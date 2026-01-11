@@ -406,3 +406,45 @@ if (mu_true == 25.71) {
 power <- ERF.t
 cat("power using t cv:", power, "\n")
 
+#----probabilities of thresholds are exceeded----
+
+# Example: Probability that a scan exceeds 40 minutes
+threshold <- 40
+empirical_prob <- mean(type2$Duration > threshold)
+cat("Empirical probability that a scan exceeds", threshold, "minutes:", round(empirical_prob, 3), "\n")
+
+empirical_prob_cases_abs <- empirical_prob* 100
+cat("A scan exceeds", threshold, "minutes in:", round(empirical_prob_cases_abs, 0),"out of 100 cases","\n")
+
+
+
+# Define a function to calculate the probability of exceeding the threshold
+prob_exceed <- function(data, indices) {
+  resampled_data <- data[indices]
+  mean(resampled_data > threshold)
+}
+
+# Run the bootstrap
+set.seed(123)
+n_boot <- 1000
+boot_results_prob <- boot(
+  data = type2$Duration,
+  statistic = prob_exceed,
+  R = n_boot
+)
+
+# Calculate the 95% confidence interval
+boot_ci_prob <- boot.ci(boot_results_prob, type = "bca", conf = 0.95)
+cat("95% Confidence Interval for probability of exceeding", threshold, "minutes:",
+    round(boot_ci_prob$bca[4:5], 3), "\n")
+
+
+thresholds <- c(30, 40, 50)
+for (t in thresholds) {
+  empirical_prob <- mean(type2$Duration > t)
+  boot_results_prob <- boot(type2$Duration, prob_exceed, R = n_boot)
+  boot_ci_prob <- boot.ci(boot_results_prob, type = "bca", conf = 0.95)
+  cat("Threshold:", t, "minutes\n")
+  cat("Empirical probability:", round(empirical_prob, 3), "\n")
+  cat("95% CI:", round(boot_ci_prob$bca[4:5], 3), "\n\n")
+}
