@@ -169,18 +169,42 @@ ggplot(data.frame(inter_arrival_times), aes(x = inter_arrival_times)) +
        y = "Density") +
   theme_minimal()
 
+#checking for exponential distribution
 fit_exp <- fitdist(inter_arrival_times, "exp", method = "mle")
 plot(fit_exp)
 
-fit_gamma <- fitdist(inter_arrival_times, "gamma", method = "mle")
-plot(fit_gamma)
+ggplot(data.frame(inter_arrival_times), aes(x = inter_arrival_times)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 30, fill = "blue", color = "black", alpha = 0.8) +
+  stat_function(fun = dexp,
+                args = (rate = fit_exp$estimate["rate"]),
+                color = "red", linewidth = 1.2) +
+  labs(title = "Distribution of Inter-Arrival Times for Type 2 Patients",
+       x = "Inter-Arrival Time (minutes)",
+       y = "Density") +
+  theme_minimal()
 
+
+
+#checking for gamma distribution for arrival times
+fit_gamma_at <- fitdist(inter_arrival_times, "gamma", method = "mle")
+plot(fit_gamma_at)
+
+
+ggplot(data.frame(inter_arrival_times), aes(x = inter_arrival_times)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 30, fill = "blue", color = "black", alpha = 0.8) +
+  stat_function(fun = dgamma,
+                args = list(shape= fit_gamma_at$estimate["shape"], rate = fit_gamma_at$estimate["rate"]),
+                color = "red", linewidth = 1.2) +
+  labs(title = "Distribution of Inter-Arrival Times for Type 2 Patients",
+       x = "Inter-Arrival Time (minutes)",
+       y = "Density") +
+  theme_minimal()
 
 cat("Exponential AIC:", AIC(fit_exp), "\n")
-cat("Gamma AIC:", AIC(fit_gamma), "\n")
+cat("Gamma AIC:", AIC(fit_gamma_at), "\n")
 
 cat("Exponential BIC:", BIC(fit_exp), "\n")
-cat("Gamma BIC:", BIC(fit_gamma), "\n")
+cat("Gamma BIC:", BIC(fit_gamma_at), "\n")
 
 
 #----bootstrap the uncertainty of daily patients (t2) parameters----
