@@ -70,9 +70,9 @@ boot_results_daily1 <- boot(data= daily_n1,
 #calculate CI for bootstrap at 0.95
 boot_ci_daily_n1 <- boot.ci(boot_results_daily1, conf = 0.95, type = "bca")
 print(boot_ci_daily_n1)
-results_boot_ci_d1 <- round(boot_ci_daily_n1$bca[4:5], digits=0)
+results_boot_ci_d1 <- round(boot_ci_daily_n1$bca[4:5], digits=2)
 results_boot_ci_d1
-cat("Estimated lambda (mean daily arrivals for Type 1):", round(boot_results_daily1$t0, digits=0), "\n")
+cat("Estimated lambda (mean daily arrivals for Type 1):", round(boot_results_daily1$t0, digits=2), "\n")
 cat("95% Confidence Interval for lambda:", results_boot_ci_d1, "\n")
 
 #----scan duration patients type 1 ----
@@ -123,13 +123,13 @@ boot_ci_duration1_sd <- boot.ci(boot_results_duration1, conf = 0.95, type = "bca
 print(boot_ci_duration1_sd)
 
 cat("Estimated mean duration for Type 1:",
-    round(boot_results_duration1$t0[1], digits=0), "\n")
+    round(boot_results_duration1$t0[1], digits=2), "\n")
 cat("95% Confidence Interval for mean duration for Type 1",
-    round(boot_ci_duration1_mean$bca[4:5]), digits= 0,"\n")
+    round(boot_ci_duration1_mean$bca[4:5]), digits= 2,"\n")
 cat("Estimated sd duration for Type 1:",
-    round(boot_results_duration1$t0[2], digits=0), "\n")
+    round(boot_results_duration1$t0[2], digits=2), "\n")
 cat("95% Confidence Interval for sd duration for Type 1",
-    round(boot_ci_duration1_sd$bca[4:5]), digits= 0,"\n")
+    round(boot_ci_duration1_sd$bca[4:5]), digits= 2,"\n")
 
 #----Patients type 2----
 #----number daily patients (t2)----
@@ -156,6 +156,33 @@ sd_daily_n2 <- round(sd_daily_n2, digits= 2)  #round up number
 print(sd_daily_n2)
 cat("Standard deviance of number of patients of type 2 daily is:", sd_daily_n2,"\n")
 
+#----distribution arrival times ----
+# Plot histogram of times between arrival for Type 2 patients
+type2_sorted <- type2 %>% arrange(Time)
+
+inter_arrival_times <- diff(type2_sorted$Time)
+
+ggplot(data.frame(inter_arrival_times), aes(x = inter_arrival_times)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 30, fill = "steelblue", color = "black", alpha = 0.8) +
+  labs(title = "Distribution of Inter-Arrival Times for Type 2 Patients",
+       x = "Inter-Arrival Time (minutes)",
+       y = "Density") +
+  theme_minimal()
+
+fit_exp <- fitdist(inter_arrival_times, "exp", method = "mle")
+plot(fit_exp)
+
+fit_gamma <- fitdist(inter_arrival_times, "gamma", method = "mle")
+plot(fit_gamma)
+
+
+cat("Exponential AIC:", AIC(fit_exp), "\n")
+cat("Gamma AIC:", AIC(fit_gamma), "\n")
+
+cat("Exponential BIC:", BIC(fit_exp), "\n")
+cat("Gamma BIC:", BIC(fit_gamma), "\n")
+
+
 #----bootstrap the uncertainty of daily patients (t2) parameters----
 lambda_estimate_t2 <- function(data, indices) {
   resampled_data <- data[indices] #get new resampled data
@@ -177,6 +204,7 @@ results_boot_ci_d2 <- round(boot_ci_daily_n2$bca[4:5], digits=2)
 results_boot_ci_d2
 cat("Estimated lambda_t2 (mean daily arrivals for Type 2):", round(boot_results_daily2$t0, digits=2), "\n")
 cat("95% Confidence Interval for lambda_t2:", results_boot_ci_d2, "\n")
+
 
 #----scan duration patients type 2 ----
 #----parameters for duration----
@@ -379,6 +407,11 @@ cat("95% Confidence Interval for probability of exceeding", threshold, "minutes:
 
 thresholds <- c(30, 40, 50)
 for (t in thresholds) {
+  prob_exceed <- function(data, indices){
+    resampled_data <- data[indices]
+    mean(resampled_data > t)
+  }
+  
   empirical_prob <- mean(type2$Duration > t)
   boot_results_prob <- boot(type2$Duration, prob_exceed, R = n_boot)
   boot_ci_prob <- boot.ci(boot_results_prob, type = "bca", conf = 0.95)
@@ -387,7 +420,8 @@ for (t in thresholds) {
   cat("95% CI:", round(boot_ci_prob$bca[4:5], 3), "\n\n")
 }
 
-#----finding apporpriate distribution for type 2 scan durations ----
+
+#----finding appropriate distribution for type 2 scan durations ----
 library(fitdistrplus)
 
 fit_gamma <- fitdist(type2$Duration, "gamma", method = "mle")
@@ -440,7 +474,6 @@ cat("Mean of simulated probabilities of exceeding 40 minutes:", round(mean(sim_p
 
 
 #----MC Sim for lognormal dist----
-#double check!!!!!
 set.seed(42)                           # Set the seed for the random number generator
 nr.sim <- 5000                          # Number of simulations
 n <- n_d2                               # Size is number of observations of scans for t2 patients
@@ -461,7 +494,6 @@ for (i in 1:nr.sim){                    # Start the simulations
   
 }
 
-
 ## Step 4: Summarize ##
 mu_l <- fit_lognormal$estimate["meanlog"]
 sigma_l <- fit_lognormal$estimate["sdlog"]
@@ -470,12 +502,12 @@ true_mean_lognorm <- exp(mu_l + (sigma_l)^2/2)
 true_sd_lognorm <- sqrt((exp((sigma_l)^2)-1)*exp(2*mu_l+(sigma_l)^2))
 true_prob_40_lognorm <- 1 - plnorm(40, meanlog = fit_lognormal$estimate["meanlog"], sdlog = fit_lognormal$estimate["sdlog"])
 
-cat("True mean:", true_mean_lognorm, "\n")
-cat("Mean of simulated means:", mean(sim_mean_lognorm), "\n")
-cat("True standard deviation:", true_sd_lognorm, "\n")
-cat("Mean of simulated standard deviations:", mean(sim_sd_lognorm), "\n")
-cat("True probability of exceeding 40 minutes:", true_prob_40_lognorm, "\n")
-cat("Mean of simulated probabilities of exceeding 40 minutes:", mean(sim_prob_40_lognorm), "\n")
+cat("True mean:", round(true_mean_lognorm, 2),"\n")
+cat("Mean of simulated means:", round(mean(sim_mean_lognorm),2), "\n")
+cat("True standard deviation:", round(true_sd_lognorm,2), "\n")
+cat("Mean of simulated standard deviations:", round(mean(sim_sd_lognorm), 2), "\n")
+cat("True probability of exceeding 40 minutes:", round(true_prob_40_lognorm,2), "\n")
+cat("Mean of simulated probabilities of exceeding 40 minutes:", round(mean(sim_prob_40_lognorm), 2), "\n")
 
 #----visualize log norm dist----
 #----visualize the scan duration distribution ----
