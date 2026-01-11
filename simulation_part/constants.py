@@ -1,5 +1,5 @@
 # Settings
-PRINT_SIM_PROGRESS = False
+PRINT_SIM_PROGRESS = True
 
 
 # Time values
