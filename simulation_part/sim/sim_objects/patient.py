@@ -1,3 +1,5 @@
+import numpy as np
+
 from simulation_part.constants import HOURS_IN_DAY
 from simulation_part.sim.sim_objects.simulation_time import Time
 
@@ -31,6 +33,12 @@ def _sample_random_variable(rng, dist):
     if dist[0] == 'normal':
         (mu, sig) = dist[1]
         return rng.normal(loc=mu, scale=sig)
+    elif dist[0] == 'lognormal':
+        (mu, sig) = dist[1]
+        # The mean and standard deviation of the underlying normal distribution
+        log_sig = np.sqrt(np.log(1 + (sig / mu) ** 2))
+        log_mu = np.log(mu) - 0.5 * log_sig ** 2
+        return rng.lognormal(mean=log_mu, sigma=log_sig)
     elif dist[0] == 'exponential':
         (lambda_inv,) = dist[1]
         return rng.exponential(scale=lambda_inv)
