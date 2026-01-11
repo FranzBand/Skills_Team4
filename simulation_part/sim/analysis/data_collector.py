@@ -77,12 +77,14 @@ class DataCollector:
                     wait1: "mean",
                     wait2: "mean",
                     over: "mean",
-                    idle: lambda x: x.sum() / DURATION_DAYS,
+                    # .sum() / DURATION_DAYS is already done in end_experiment
+                    idle: "mean",
                 }))
             wait1_data = df_sorted.groupby(slot)[wait1].mean()
             wait2_data = df_sorted.groupby(slot)[wait2].mean()
             over_data = df_sorted.groupby(slot)[over].mean()
-            idle_data = df_sorted.groupby(slot)[idle].sum() / DURATION_DAYS
+            # .sum() / DURATION_DAYS is already done in end_experiment
+            idle_data = df_sorted.groupby(slot)[idle].mean()
 
             fig, ax1 = plt.subplots(figsize=(8, 6))
 
