@@ -31,7 +31,6 @@ View(data_2t)
 #----Patients type 1----
 #----number daily patients (t1)----
 #number of patients is a Poisson distribution (given in the case)
-#to do: get the mean and then CI with bootstrap
 
 #Daily counts of Type 1 patients 
 daily_counts_t1 <- summarise(
@@ -47,7 +46,7 @@ lambda_hat <- mean(daily_n1)  #find the mean of the number of daily patients
 lambda_hat <- round(lambda_hat, digits= 2)  #round up to have simple number for hospital
 print(lambda_hat)
 cat("Mean of number of patients of type 1 daily is:", lambda_hat,"\n")
-  
+
 sd_daily_n1 <- sd(daily_n1) #get the standard deviation for number of patients daily
 sd_daily_n1 <- round(sd_daily_n1, digits= 2)  #round up number
 print(sd_daily_n1)
@@ -127,8 +126,8 @@ duration_estimate <- function(data, indices) {
 n_boot <- 1000  #number of times for bootstrap replicates
 
 boot_results_duration1 <- boot(data= data_1d,
-                     statistic = duration_estimate,
-                     R= n_boot)
+                               statistic = duration_estimate,
+                               R= n_boot)
 
 #calculate CI for bootstrap at 0.95
 boot_ci_duration1_mean <- boot.ci(boot_results_duration1, conf = 0.95, type = "bca", index=1)
@@ -418,7 +417,6 @@ alpha <- 0.05                           # Nominal level of the test
 
 sim_mean_gamma <- rep(0, times = nr.sim)      # Initialise a vector of 0s to store means
 sim_sd_gamma <- rep(0, times = nr.sim)      # Initialise a vector of 0s to store sd
-sim_prob_40_gamma <- rep(0, times = nr.sim)
 
 for (i in 1:nr.sim){                    # Start the simulations
   ## Step 1: Simulate ##
@@ -427,21 +425,17 @@ for (i in 1:nr.sim){                    # Start the simulations
   ## Step 2: Apply ##
   sim_mean_gamma[i] <- mean(X)                    # Sample mean of X
   sim_sd_gamma[i] <- sd(X)                     # Standard deviation of X
-  sim_prob_40_gamma[i] <- mean(X > 40)         # prob exceeding 40 min
-
+  
 }
 
-## Step 4: Summarize ##
+## Step 3: Summarize ##
 true_mean_gamma <- fit_gamma$estimate["shape"]/ fit_gamma$estimate["rate"]
 true_sd_gamma <- sqrt(fit_gamma$estimate["shape"])/ fit_gamma$estimate["rate"]
-true_prob_40_gamma <- 1 - pgamma(40, shape = fit_gamma$estimate["shape"], rate = fit_gamma$estimate["rate"])
 
 cat("True mean:", round(true_mean_gamma, 2), "\n")
 cat("Mean of simulated means:", round(mean(sim_mean_gamma), 2), "\n")
 cat("True standard deviation:", round(true_sd_gamma,2), "\n")
 cat("Mean of simulated standard deviations:", round(mean(sim_sd_gamma), 2), "\n")
-cat("True probability of exceeding 40 minutes:", round(true_prob_40_gamma,2), "\n")
-cat("Mean of simulated probabilities of exceeding 40 minutes:", round(mean(sim_prob_40_gamma),2),"\n")
 
 
 #----MC Sim for lognormal dist----
@@ -452,7 +446,6 @@ alpha <- 0.05                           # Nominal level of the test
 
 sim_mean_lognorm <- rep(0, times = nr.sim)      # Initialise a vector of 0s to store means
 sim_sd_lognorm <- rep(0, times = nr.sim)      # Initialise a vector of 0s to store sds
-sim_prob_40_lognorm <- rep(0, times = nr.sim)
 
 for (i in 1:nr.sim){                    # Start the simulations
   ## Step 1: Simulate ##
@@ -461,8 +454,6 @@ for (i in 1:nr.sim){                    # Start the simulations
   ## Step 2: Apply ##
   sim_mean_lognorm[i] <- mean(X)                    # Sample mean of X
   sim_sd_lognorm[i] <- sd(X)                     # Standard deviation of X
-  sim_prob_40_lognorm[i] <- mean(X > 40)         # prob exceeding 40 min
-  
 }
 
 ## Step 3: Summarize ##
@@ -471,23 +462,20 @@ sigma_l <- fit_lognormal$estimate["sdlog"]
 
 true_mean_lognorm <- exp(mu_l + (sigma_l)^2/2)
 true_sd_lognorm <- sqrt((exp((sigma_l)^2)-1)*exp(2*mu_l+(sigma_l)^2))
-true_prob_40_lognorm <- 1 - plnorm(40, meanlog = fit_lognormal$estimate["meanlog"], sdlog = fit_lognormal$estimate["sdlog"])
 
 cat("True mean:", round(true_mean_lognorm, 2),"\n")
 cat("Mean of simulated means:", round(mean(sim_mean_lognorm),2), "\n")
 cat("True standard deviation:", round(true_sd_lognorm,2), "\n")
 cat("Mean of simulated standard deviations:", round(mean(sim_sd_lognorm), 2), "\n")
-cat("True probability of exceeding 40 minutes:", round(true_prob_40_lognorm,2), "\n")
-cat("Mean of simulated probabilities of exceeding 40 minutes:", round(mean(sim_prob_40_lognorm), 2), "\n")
 
 #----visualize log norm dist----
 #----visualize the scan duration distribution ----
 ggplot(type2, aes(x=Duration))+
   geom_histogram(aes(y= after_stat(density)), bins=20, fill= "darkgreen", color= "black",
                  alpha = 0.8)+
-stat_function(fun = dlnorm,
-              args = list(meanlog = fit_lognormal$estimate["meanlog"], sdlog = fit_lognormal$estimate["sdlog"]),
-              color = "red", linewidth = 1.2) +
+  stat_function(fun = dlnorm,
+                args = list(meanlog = fit_lognormal$estimate["meanlog"], sdlog = fit_lognormal$estimate["sdlog"]),
+                color = "red", linewidth = 1.2) +
   labs(title = "Type 2 Scan Duration with Lognormal Curve",
        x= "Duration (minutes)", y= "Density")+
   theme_minimal()
